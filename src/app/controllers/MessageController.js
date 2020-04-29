@@ -5,7 +5,7 @@ const Yup = require('yup');
 class MessageController {
   async store(req, res) {
     const schema = Yup.object().shape({
-      content: Yup.string().required(),
+      content: Yup.string().required().max(228),
       user: Yup.string().required(),
     });
 
@@ -30,7 +30,11 @@ class MessageController {
   }
 
   async index(req, res) {
-    const messages = await Message.find().populate({
+    const messages = await Message.find({}, null, {
+      sort: {
+        createdAt: -1,
+      },
+    }).populate({
       path: 'user',
       select: 'username',
     });
