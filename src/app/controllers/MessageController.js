@@ -41,6 +41,26 @@ class MessageController {
 
     return res.json(messages);
   }
+
+  async destroy(req, res) {
+    const schema = Yup.object().shape({
+      id: Yup.string().required(),
+    });
+
+    if (!(await schema.isValid(req.params))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
+
+    const { id } = req.params;
+
+    try {
+      await Message.findByIdAndDelete({ _id: id });
+
+      return res.json({ success: 'Message deleted' });
+    } catch (error) {
+      return res.status(400).json({ error: 'Error deleting message.' });
+    }
+  }
 }
 
 module.exports = new MessageController();
