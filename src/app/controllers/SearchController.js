@@ -1,7 +1,8 @@
 const Message = require('../models/Message');
 const User = require('../models/User');
 const Yup = require('yup');
-const datefns = require('date-fns');
+const isSameDay = require('date-fns/isSameDay');
+const parseISO = require('date-fns/parseISO');
 
 class SearchController {
   async index(req, res) {
@@ -14,31 +15,27 @@ class SearchController {
       return res.status(400).json({ error: 'Invalid validation' });
     }
 
-    let user = {};
-    let data = {};
+    const messages = await Message.find().populate({
+      path: 'user',
+      select: 'username',
+    });
 
-    if (req.query.username) {
-      user = await User.findOne({ username: req.query.username });
-
-      if (!user) {
-        return res.status(400).json({ error: "User doesn't exists" });
+    const searchedMessages = await messages.filter((message) => {
+      if (req.query.username && req.query.date) {
+        return (
+          req.query.username === message.user.username &&
+          isSameDay(message.createdAt, parseISO(req.query.date))
+        );
       }
+      if (req.query.username) {
+        return req.query.username === message.user.username;
+      }
+      if (req.query.date) {
+        return isSameDay(message.createdAt, parseISO(req.query.date));
+      }
+    });
 
-      data = {
-        user: user._id,
-      };
-    }
-
-    if (req.query.date) {
-      data = {
-        ...data,
-        createdAt: req.query.date,
-      };
-    }
-
-    const result = await Message.find(data);
-
-    return res.send(result);
+    return res.json(searchedMessages);
   }
 }
 
