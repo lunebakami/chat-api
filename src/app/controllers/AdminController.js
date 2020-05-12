@@ -27,7 +27,7 @@ class AdminController {
       password: password_hash,
     });
 
-    return res.json({ id: _id, username });
+    return res.json({ id: admin._id, username });
   }
 
   async show(req, res) {
